@@ -126,6 +126,10 @@ export default async (captureType: CaptureType, params: CaptureParameters): Prom
       'page.evaluateHandle',
       () => page.evaluateHandle('document.fonts.ready'),
     )
+    await logException(
+      'page.waitForSelector',
+      () => page.waitForSelector('#pdf-ready'),
+    )
 
     let buffer: Buffer
     if (captureType === CaptureType.Screenshot) {
