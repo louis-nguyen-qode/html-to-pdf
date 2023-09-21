@@ -109,6 +109,11 @@ export default async (captureType: CaptureType, params: CaptureParameters): Prom
       )
     }
 
+    await logException(
+      'page.waitForSelector',
+      () => page.waitForSelector('#pdf-ready'),
+    )
+
     const waitUntil = params.waitUntil || (url ? defaultWaitUntil : ['load'])
     if (html) {
       const loaded = logException('page.waitForNavigation', () => page.waitForNavigation({
@@ -125,10 +130,6 @@ export default async (captureType: CaptureType, params: CaptureParameters): Prom
     await logException(
       'page.evaluateHandle',
       () => page.evaluateHandle('document.fonts.ready'),
-    )
-    await logException(
-      'page.waitForSelector',
-      () => page.waitForSelector('#pdf-ready'),
     )
 
     let buffer: Buffer
