@@ -32,7 +32,7 @@ jobs:
         uses: docker/metadata-action@v4
         id: meta
         with:
-          images: muehlemannpopp/html-to-pdf
+          images: louisqode/html-to-pdf
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
