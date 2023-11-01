@@ -2,7 +2,7 @@
 version: "3.8"
 services:
   printer-test:
-    image: muehlemann-popp/html-to-pdf-test
+    image: louisqode/html-to-pdf-test
     build:
       context: ../
       dockerfile: deploy/Dockerfile

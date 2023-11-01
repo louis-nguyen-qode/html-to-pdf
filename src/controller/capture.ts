@@ -4,11 +4,16 @@ import puppeteer, {
   PDFOptions,
   PuppeteerLifeCycleEvent,
   Viewport,
-} from 'puppeteer'
+} from 'puppeteer';
 
-import Buffer from 'buffer'
-import { CaptureParameters, CaptureType } from '~/interface'
-import timestamp from '~/util/timestamp'
+import Buffer from 'buffer';
+import { CaptureParameters, CaptureType } from '~/interface';
+import timestamp from '~/util/timestamp';
+import { promises as fs, existsSync } from 'fs';
+import path from 'path';
+import { promisify } from 'util';
+import { exec } from 'child_process';
+import { randomUUID } from 'crypto';
 
 export const defaultUrl = 'about:blank'
 
@@ -35,7 +40,7 @@ export const defaultViewportOptions: Viewport = {
 const debugUsingBrowserless = process.env.BROWSERLESS === '1'
 const defaultWaitUntil: PuppeteerLifeCycleEvent[] = ['domcontentloaded', 'load', 'networkidle2', 'networkidle0']
 
-export const logException = async <T> (when: string, process: () => Promise<T>): Promise<T> => {
+export const logException = async <T>(when: string, process: () => Promise<T>): Promise<T> => {
   try {
     return await process()
   } catch (e) {
@@ -47,6 +52,53 @@ export const logException = async <T> (when: string, process: () => Promise<T>):
   }
 }
 
+
+const execPromise = promisify(exec);
+
+const cwd = process.cwd();
+
+const compressPdf = async (base64: string): Promise<string> => {
+  try {
+    const timestamp = new Date().getTime();
+    const tempFolder = path.join(cwd, "temp");
+    const hasTempFolder = existsSync(tempFolder);
+
+    if (!hasTempFolder) {
+      await fs.mkdir(tempFolder);
+    }
+
+    const originalFilePath = path.join(cwd, "temp", `${timestamp}_original.pdf`);
+    const compressFilePath = path.join(cwd, "temp", `${timestamp}_compress.pdf`);
+
+    await fs.writeFile(originalFilePath, base64, "base64");
+
+    await execPromise(
+      `gs \\
+      -sDEVICE=pdfwrite \\
+      -dSAFER \\
+      -dCompatibilityLevel=1.4 \\
+      -dColorConversionStrategy=/LeaveColorUnchanged \\
+      -dSubsetFonts=true \\
+      -dEmbedAllFonts=true \\
+      -dPDFSETTINGS=/printer \\
+      -dNOPAUSE \\
+      -dQUIET \\
+      -dBATCH \\
+      -sOutputFile="${compressFilePath}" \\
+      ${originalFilePath}`
+    );
+
+    const compressFileBase64 = await fs.readFile(compressFilePath, "base64");
+
+    // await fs.unlink(originalFilePath);
+    await fs.unlink(compressFilePath);
+
+    return compressFileBase64;
+  } catch (error) {
+    throw error;
+  }
+};
+
 /**
  We trust the content we open in Chrome, so we can launch Chrome with the --no-sandbox argument.
  Generally running without a sandbox is strongly discouraged. Consider configuring a sandbox instead!
@@ -54,6 +106,8 @@ export const logException = async <T> (when: string, process: () => Promise<T>):
 */
 export default async (captureType: CaptureType, params: CaptureParameters): Promise<Buffer> => {
   let browser: Browser | null = null
+  const uuid = randomUUID();
+  console.log(uuid, 'New', new Date());
   if (!params) {
     throw new Error('Capture parameters should be defined')
   }
@@ -153,9 +207,17 @@ export default async (captureType: CaptureType, params: CaptureParameters): Prom
       if (pdfOptions?.path) {
         delete pdfOptions.path
       }
+
+      console.log(uuid, 'Start', new Date());
       buffer = await logException(
         'page.pdf',
-        () => page.pdf({ ...defaultPDFOptions, ...pdfOptions || {} }),
+        async () => {
+          const res = await page.pdf({ ...defaultPDFOptions, ...pdfOptions || {} });
+          console.log(uuid, 'PDF', new Date());
+          const converted = Buffer.Buffer.from(await compressPdf(res.toString("base64")), 'base64');
+          console.log(uuid, 'Optimized', new Date());
+          return converted;
+        },
       )
     }
     await logException('page.close', () => page.close())

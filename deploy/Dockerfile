@@ -10,6 +10,7 @@ RUN \
     chromium \
     ttf-freefont \
     font-noto-emoji \
+    ghostscript \
   && apk add --no-cache \
     --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
     font-wqy-zenhei \
