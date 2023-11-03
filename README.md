@@ -1,7 +1,7 @@
 HTML to PDF
 ==========
 
-![MIT](https://img.shields.io/github/license/muehlemann-popp/html-to-pdf)
+![MIT](https://img.shields.io/github/license/louisqode/html-to-pdf)
 ![image size](https://img.shields.io/docker/image-size/muehlemannpopp/html-to-pdf)
 ![version](https://img.shields.io/docker/v/muehlemannpopp/html-to-pdf/latest)
 
