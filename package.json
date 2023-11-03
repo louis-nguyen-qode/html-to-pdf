@@ -1,7 +1,7 @@
 {
   "name": "html-to-pdf",
   "version": "1.0.0",
-  "homepage": "https://github.com/muehlemann-popp/html-to-pdf",
+  "homepage": "https://github.com/louisqode/html-to-pdf",
   "license": "MIT",
   "scripts": {
     "start": "touch ./build/main.dev.js; npm-run-all --parallel --print-label watch:server watch:build",
