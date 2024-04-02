@@ -174,8 +174,8 @@ export default async (captureType: CaptureType, params: CaptureParameters): Prom
       await loaded
     } else {
       await logException('page.goto', () => page.goto(url || defaultUrl, {
-        waitUntil,
-        timeout: defaultNavigationTimeout
+        waitUntil: 'load',
+        timeout: defaultNavigationTimeout,
       }))
     }
     await logException(
