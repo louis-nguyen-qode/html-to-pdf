@@ -17,12 +17,13 @@ import { randomUUID } from 'crypto';
 
 export const defaultUrl = 'about:blank'
 
-export const defaultNavigationTimeout = 60000
+export const defaultNavigationTimeout = 300000
 
 // see https://pptr.dev/#?product=Puppeteer&version=v9.1.0&show=api-pagepdfoptions
 const defaultPDFOptions: PDFOptions = {
   printBackground: true,
   preferCSSPageSize: true,
+  timeout: defaultNavigationTimeout,
   margin: {
     top: '0',
     right: '0',
@@ -90,7 +91,7 @@ const compressPdf = async (base64: string): Promise<string> => {
 
     const compressFileBase64 = await fs.readFile(compressFilePath, "base64");
 
-    // await fs.unlink(originalFilePath);
+    await fs.unlink(originalFilePath);
     await fs.unlink(compressFilePath);
 
     return compressFileBase64;
@@ -174,6 +175,7 @@ export default async (captureType: CaptureType, params: CaptureParameters): Prom
     } else {
       await logException('page.goto', () => page.goto(url || defaultUrl, {
         waitUntil,
+        timeout: defaultNavigationTimeout
       }))
     }
     await logException(
@@ -183,7 +185,7 @@ export default async (captureType: CaptureType, params: CaptureParameters): Prom
 
     await logException(
       'page.waitForSelector',
-      () => page.waitForSelector('#pdf-ready'),
+      () => page.waitForSelector('#pdf-ready', { timeout: defaultNavigationTimeout }),
     )
 
     let buffer: Buffer
