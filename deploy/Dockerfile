@@ -13,7 +13,6 @@ RUN \
     ghostscript \
   && apk add --no-cache \
     --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
-    font-wqy-zenhei \
   && apk add --no-cache \
     tini make gcc g++ python3 git \
   && mkdir -p /app/build \
