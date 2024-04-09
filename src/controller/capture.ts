@@ -58,7 +58,7 @@ const execPromise = promisify(exec);
 
 const cwd = process.cwd();
 
-const compressPdf = async (base64: string): Promise<string> => {
+const compressPdf = async (buffer: Buffer.Buffer): Promise<Buffer.Buffer> => {
   try {
     const timestamp = new Date().getTime();
     const tempFolder = path.join(cwd, "temp");
@@ -71,7 +71,7 @@ const compressPdf = async (base64: string): Promise<string> => {
     const originalFilePath = path.join(cwd, "temp", `${timestamp}_original.pdf`);
     const compressFilePath = path.join(cwd, "temp", `${timestamp}_compress.pdf`);
 
-    await fs.writeFile(originalFilePath, base64, "base64");
+    await fs.writeFile(originalFilePath, buffer);
 
     await execPromise(
       `gs \\
@@ -89,7 +89,7 @@ const compressPdf = async (base64: string): Promise<string> => {
       ${originalFilePath}`
     );
 
-    const compressFileBase64 = await fs.readFile(compressFilePath, "base64");
+    const compressFileBase64 = await fs.readFile(compressFilePath);
 
     await fs.unlink(originalFilePath);
     await fs.unlink(compressFilePath);
@@ -216,7 +216,7 @@ export default async (captureType: CaptureType, params: CaptureParameters): Prom
         async () => {
           const res = await page.pdf({ ...defaultPDFOptions, ...pdfOptions || {} });
           console.log(uuid, 'PDF', new Date());
-          const converted = Buffer.Buffer.from(await compressPdf(res.toString("base64")), 'base64');
+          const converted = await compressPdf(res);
           console.log(uuid, 'Optimized', new Date());
           return converted;
         },
